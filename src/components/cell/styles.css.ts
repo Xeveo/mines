@@ -5,6 +5,12 @@ export const buttonClass = style({
   minHeight: "100%",
   borderRadius: 0,
   lineHeight: "1.5em",
+  border: "2px solid rgb(227, 227, 227)",
+  borderInline: "2px outset rgb(227, 227, 227)",
+  borderBlock: "2px outset rgb(227, 227, 227)",
+  ":disabled": {
+    color: "unset",
+  },
 });
 
 export const cellClass = style({
