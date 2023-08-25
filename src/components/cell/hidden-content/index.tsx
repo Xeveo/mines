@@ -1,4 +1,4 @@
-import { useGame } from "../../../context/game";
+import { useGameContext } from "../../../context/game";
 import type { Cell } from "../../../types";
 import { ICON } from "../icons";
 
@@ -17,7 +17,7 @@ const hiddenContent = (cell: Cell, isGameOver: boolean) => {
 };
 
 export const HiddenContent: React.FC<{ cell: Cell }> = ({ cell }) => {
-  const { checkCell, flagCell, isGameOver } = useGame();
+  const { checkCell, flagCell, isGameOver } = useGameContext();
 
   return (
     <button

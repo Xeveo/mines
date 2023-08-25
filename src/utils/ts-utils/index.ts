@@ -19,7 +19,7 @@ export const defined = <T>(
 
 export const mapDefined = <T, R>(
   things: ReadonlyArray<T>,
-  mapFn: (item: T) => R | undefined,
+  mapFn: (thing: T) => R | undefined,
 ): R[] => {
   const results: R[] = [];
 

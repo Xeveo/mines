@@ -1,4 +1,4 @@
-import { useGame } from "../../../context/game";
+import { useGameContext } from "../../../context/game";
 import type { Cell } from "../../../types";
 import { ICON } from "../icons";
 
@@ -17,7 +17,7 @@ const revealedContent = (cell: Cell) => {
 };
 
 export const RevealedContent: React.FC<{ cell: Cell }> = ({ cell }) => {
-  const { checkSiblings, isGameOver } = useGame();
+  const { checkNeighbors, isGameOver } = useGameContext();
 
   return (
     <button
@@ -26,7 +26,7 @@ export const RevealedContent: React.FC<{ cell: Cell }> = ({ cell }) => {
       disabled={isGameOver}
       onContextMenu={(event) => {
         event.preventDefault();
-        checkSiblings(cell);
+        checkNeighbors(cell);
       }}
     >
       {revealedContent(cell)}

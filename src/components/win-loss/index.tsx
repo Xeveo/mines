@@ -1,9 +1,9 @@
-import { useGame } from "../../context/game";
+import { useGameContext } from "../../context/game";
 
 import { containerClass } from "./styles.css";
 
 export const WinLoss: React.FC = () => {
-  const { winCount, lossCount } = useGame();
+  const { winCount, lossCount } = useGameContext();
 
   return (
     <div className={containerClass}>

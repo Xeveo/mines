@@ -1,14 +1,21 @@
 import useLocalStorage from "@rehooks/local-storage";
 import React from "react";
-import { Board, Cell } from "../../types";
+import { Cell } from "../../types";
 import { createGenericContext } from "../../utils/general-context";
 import { clone } from "../../utils/ts-utils";
 import { useConfig } from "./use-config";
 import { useGameState } from "./use-game-state";
 import { useWinLoss } from "./use-win-loss";
-import { createBoard, getCell, getSiblings, placeMines } from "./utils";
+import {
+  createBoard,
+  getCell,
+  getNeighbors,
+  placeMines,
+  revealCell,
+  revealNeighbors,
+} from "./utils";
 
-export const [GameProvider, useGame] = createGenericContext(() => {
+export const [GameProvider, useGameContext] = createGenericContext(() => {
   const { winCount, lossCount, recordWin, recordLoss } = useWinLoss();
   const { rowCount, columnCount, mineCount, setConfiguration } = useConfig();
   const [board, setBoard] = useLocalStorage(
@@ -45,86 +52,54 @@ export const [GameProvider, useGame] = createGenericContext(() => {
     [setBoard, setConfiguration, startGame],
   );
 
-  const revealSiblings = React.useCallback(
-    (board: Board, cell: Cell) => {
-      for (const sibling of getSiblings(board, cell)) {
-        if (!sibling.isRevealed && !sibling.isFlagged) {
-          sibling.isRevealed = true;
-
-          if (sibling.isMine) {
-            loseGame();
-          } else if (sibling.adjacentMines === 0) {
-            revealSiblings(board, sibling);
-          }
-        }
-      }
-    },
-    [loseGame],
-  );
-
-  const checkCell = React.useCallback(
-    ({ rowIndex, columnIndex, isFlagged }: Cell) => {
-      if (isFlagged) {
-        return;
-      }
-
-      const next = clone(board);
-      const cell = getCell(next, rowIndex, columnIndex);
-      cell.isRevealed = true;
-
-      if (!areMinesActive) {
-        placeMines(next, cell, mineCount);
-        activateMines();
-      }
-
-      if (cell.isMine) {
-        loseGame();
-      } else if (cell.adjacentMines === 0) {
-        revealSiblings(next, cell);
-      }
-
-      setBoard(next);
-    },
-    [
-      board,
-      areMinesActive,
-      setBoard,
-      mineCount,
-      activateMines,
-      loseGame,
-      revealSiblings,
-    ],
-  );
-
-  const flagCell = React.useCallback(
-    ({ rowIndex, columnIndex }: Cell) => {
-      const next = clone(board);
-      const cell = getCell(next, rowIndex, columnIndex);
-
-      cell.isFlagged = !cell.isFlagged;
-
-      setBoard(next);
-    },
-    [board, setBoard],
-  );
-
-  const checkSiblings = React.useCallback(
+  const checkNeighbors = React.useCallback(
     (cell: Cell) => {
-      const flaggedSiblings = getSiblings(board, cell).filter(
+      const flaggedNeighbors = getNeighbors(board, cell).filter(
         ({ isFlagged }) => isFlagged,
       );
 
-      if (!cell.isRevealed || cell.adjacentMines !== flaggedSiblings.length) {
+      if (!cell.isRevealed || cell.adjacentMines !== flaggedNeighbors.length) {
         return;
       }
 
-      const next = clone(board);
+      const nextBoard = clone(board);
 
-      revealSiblings(next, cell);
-
-      setBoard(next);
+      revealNeighbors(nextBoard, cell, loseGame);
+      setBoard(nextBoard);
     },
-    [board, revealSiblings, setBoard],
+    [board, loseGame, setBoard],
+  );
+
+  const checkCell = React.useCallback(
+    (cell: Cell) => {
+      if (cell.isFlagged) {
+        return;
+      }
+
+      const nextBoard = clone(board);
+      const nextCell = getCell(nextBoard, cell.rowIndex, cell.columnIndex);
+
+      if (!areMinesActive) {
+        placeMines(nextBoard, nextCell, mineCount);
+        activateMines();
+      }
+
+      revealCell(nextBoard, nextCell, loseGame);
+      setBoard(nextBoard);
+    },
+    [activateMines, areMinesActive, board, loseGame, mineCount, setBoard],
+  );
+
+  const flagCell = React.useCallback(
+    (cell: Cell) => {
+      const nextBoard = clone(board);
+      const nextCell = getCell(nextBoard, cell.rowIndex, cell.columnIndex);
+
+      nextCell.isFlagged = !nextCell.isFlagged;
+
+      setBoard(nextBoard);
+    },
+    [board, setBoard],
   );
 
   /** Win the game if all mines have been revealed */
@@ -145,7 +120,7 @@ export const [GameProvider, useGame] = createGenericContext(() => {
   return {
     board,
     checkCell,
-    checkSiblings,
+    checkNeighbors,
     columnCount,
     createGame,
     flagCell,

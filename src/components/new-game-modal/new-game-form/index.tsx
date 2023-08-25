@@ -1,5 +1,5 @@
 import React from "react";
-import { useGame } from "../../../context/game";
+import { useGameContext } from "../../../context/game";
 import { useKeyboardShortcut } from "../../../utils/use-keyboard-shortcut";
 
 import { buttonsClass, fieldsClass, formClass } from "./styles.css";
@@ -23,7 +23,7 @@ const NumberInput: React.FC<{
 );
 
 export const NewGameForm: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const { createGame, rowCount, columnCount, mineCount } = useGame();
+  const { createGame, rowCount, columnCount, mineCount } = useGameContext();
   const [rows, setRows] = React.useState(rowCount);
   const [columns, setColumns] = React.useState(columnCount);
   const [mines, setMines] = React.useState(mineCount);

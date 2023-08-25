@@ -1,10 +1,10 @@
-import { useGame } from "../../context/game";
+import { useGameContext } from "../../context/game";
 import { GridCell } from "../cell";
 
 import { boardClass } from "./styles.css";
 
 export const Board = () => {
-  const { board, rowCount, columnCount } = useGame();
+  const { board, rowCount, columnCount } = useGameContext();
 
   return (
     <div

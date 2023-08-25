@@ -5,7 +5,7 @@ interface Shortcut {
   onKeyDown: () => void;
 }
 
-export const useKeyboardShortcut = ({ key, onKeyDown }: Shortcut) => {
+export const useKeyboardShortcut = ({ key, onKeyDown }: Shortcut): void => {
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === key) {

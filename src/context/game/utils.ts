@@ -2,32 +2,59 @@ import type { Board, Cell } from "../../types";
 import { defined, mapDefined } from "../../utils/ts-utils";
 
 // prettier-ignore
-const SIBLINGS = [
+const NEIGHBORS = [
   [-1,-1],[0,-1],[1,-1],
-  [-1, 0],/* X */[1, 0],
+  [-1, 0],       [1, 0],
   [-1, 1],[0, 1],[1, 1],
 ] as const;
 
-const dimensions = (board: Board) => ({
+const dimensions = (
+  board: Board,
+): { rowCount: number; columnCount: number } => ({
   rowCount: board.length,
   columnCount: defined(board[0], "board has no rows").length,
 });
 
-export const getCell = (board: Board, rowIndex: number, columnIndex: number) =>
-  defined(board[rowIndex]?.[columnIndex], "cell does not exist");
+export const getCell = (
+  board: Board,
+  rowIndex: number,
+  columnIndex: number,
+): Cell => defined(board[rowIndex]?.[columnIndex], "cell does not exist");
 
-export const getSiblings = (board: Board, target: Cell) =>
-  mapDefined(SIBLINGS, ([columnOffset, rowOffset]) => {
-    const rowIndex = target.rowIndex + rowOffset;
-    const columnIndex = target.columnIndex + columnOffset;
+export const getNeighbors = (board: Board, cell: Cell): Cell[] =>
+  mapDefined(NEIGHBORS, ([columnOffset, rowOffset]) => {
+    const rowIndex = cell.rowIndex + rowOffset;
+    const columnIndex = cell.columnIndex + columnOffset;
 
     return board[rowIndex]?.[columnIndex];
   });
 
-const getRandomCell = (board: Board) => {
-  const randomInt = (min: number, max: number) =>
-    Math.round(Math.random() * (max - min) + min);
+export const revealCell = (board: Board, cell: Cell, loseGame: () => void) => {
+  if (!cell.isRevealed && !cell.isFlagged) {
+    cell.isRevealed = true;
 
+    if (cell.isMine) {
+      loseGame();
+    } else if (cell.adjacentMines === 0) {
+      revealNeighbors(board, cell, loseGame);
+    }
+  }
+};
+
+export const revealNeighbors = (
+  board: Board,
+  cell: Cell,
+  loseGame: () => void,
+) => {
+  for (const neighbor of getNeighbors(board, cell)) {
+    revealCell(board, neighbor, loseGame);
+  }
+};
+
+const randomInt = (min: number, max: number) =>
+  Math.round(Math.random() * (max - min) + min);
+
+const getRandomCell = (board: Board): Cell => {
   const { rowCount, columnCount } = dimensions(board);
   const rowIndex = randomInt(0, rowCount - 1);
   const columnIndex = randomInt(0, columnCount - 1);
@@ -48,14 +75,18 @@ const getRandomSafeCell = (board: Board, safeCell: Cell): Cell => {
   return cell;
 };
 
-export const placeMines = (board: Board, safeCell: Cell, mineCount: number) => {
+export const placeMines = (
+  board: Board,
+  safeCell: Cell,
+  mineCount: number,
+): void => {
   for (let i = 0; i < mineCount; i++) {
     const cell = getRandomSafeCell(board, safeCell);
 
     cell.isMine = true;
 
-    for (const adjacent of getSiblings(board, cell)) {
-      adjacent.adjacentMines += 1;
+    for (const neighbor of getNeighbors(board, cell)) {
+      neighbor.adjacentMines += 1;
     }
   }
 };
